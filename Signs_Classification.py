@@ -19,6 +19,20 @@ index = 9
 plt.imshow(X_train_orig[index])
 print ("y = " + str(np.squeeze(Y_train_orig[:, index])))
 
+
+# Data Preparation
+#  Split the Data into Train/Test Sets
+X_train = X_train_orig/255.
+X_test = X_test_orig/255.
+Y_train = convert_to_one_hot(Y_train_orig, 6).T
+Y_test = convert_to_one_hot(Y_test_orig, 6).T
+print ("number of training examples = " + str(X_train.shape[0]))
+print ("number of test examples = " + str(X_test.shape[0]))
+print ("X_train shape: " + str(X_train.shape))
+print ("Y_train shape: " + str(Y_train.shape))
+print ("X_test shape: " + str(X_test.shape))
+print ("Y_test shape: " + str(Y_test.shape))
+
 # Functional API
 
 
@@ -60,4 +74,29 @@ def convolutional_model(input_shape):
     model = tf.keras.Model(inputs=input_img, outputs=outputs)
     return model
 
+# Instantiating a Conv Model
+conv_model = convolutional_model((64, 64, 3))
+# Compile the Model
+conv_model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+# Model Summary
+conv_model.summary()
 
+output = [['InputLayer', [(None, 64, 64, 3)], 0],
+          ['Conv2D', (None, 64, 64, 8), 392, 'same', 'linear', 'GlorotUniform'],
+          ['ReLU', (None, 64, 64, 8), 0],
+          ['MaxPooling2D', (None, 8, 8, 8), 0, (8, 8), (8, 8), 'same'],
+          ['Conv2D', (None, 8, 8, 16), 528, 'same', 'linear', 'GlorotUniform'],
+          ['ReLU', (None, 8, 8, 16), 0],
+          ['MaxPooling2D', (None, 2, 2, 16), 0, (4, 4), (4, 4), 'same'],
+          ['Flatten', (None, 64), 0],
+          ['Dense', (None, 6), 390, 'softmax']]
+
+comparator(summary(conv_model), output)
+
+# Train teh Model
+
+train_dataset = tf.data.Dataset.from_tensor_slices((X_train, Y_train)).batch(64)
+test_dataset = tf.data.Dataset.from_tensor_slices((X_test, Y_test)).batch(64)
+history = conv_model.fit(train_dataset, epochs=100, validation_data=test_dataset)
