@@ -100,3 +100,16 @@ comparator(summary(conv_model), output)
 train_dataset = tf.data.Dataset.from_tensor_slices((X_train, Y_train)).batch(64)
 test_dataset = tf.data.Dataset.from_tensor_slices((X_test, Y_test)).batch(64)
 history = conv_model.fit(train_dataset, epochs=100, validation_data=test_dataset)
+# History
+history.history
+
+# Visualize the loss over time using history.history
+# The history.history["loss"] entry is a dictionary with as many values as epochs that the
+# model was trained on.
+df_loss_acc = pd.DataFrame(history.history)
+df_loss= df_loss_acc[['loss','val_loss']]
+df_loss.rename(columns={'loss':'train','val_loss':'validation'},inplace=True)
+df_acc= df_loss_acc[['accuracy','val_accuracy']]
+df_acc.rename(columns={'accuracy':'train','val_accuracy':'validation'},inplace=True)
+df_loss.plot(title='Model loss',figsize=(12,8)).set(xlabel='Epoch',ylabel='Loss')
+df_acc.plot(title='Model Accuracy',figsize=(12,8)).set(xlabel='Epoch',ylabel='Accuracy')
