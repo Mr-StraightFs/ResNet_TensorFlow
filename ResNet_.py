@@ -86,23 +86,20 @@ def convolutional_block(X, f, filters, s=2, training=True, initializer=glorot_un
     X = BatchNormalization(axis=3)(X, training=training)
     X = Activation('relu')(X)
 
-    ### START CODE HERE
-
-    ## Second component of main path (≈3 lines)
+    ## Second component of main path
     X = Conv2D(filters=F2, kernel_size=f, strides=(1, 1), padding='same', kernel_initializer=initializer(seed=0))(X)
     X = BatchNormalization(axis=3)(X, training=training)
     X = Activation('relu')(X)
 
-    ## Third component of main path (≈2 lines)
+    ## Third component of main path
     X = Conv2D(filters=F3, kernel_size=1, strides=(1, 1), padding='valid', kernel_initializer=initializer(seed=0))(X)
     X = BatchNormalization(axis=3)(X, training=training)
 
-    ##### SHORTCUT PATH ##### (≈2 lines)
+    ##### SHORTCUT PATH #####
     X_shortcut = Conv2D(filters=F3, kernel_size=1, strides=(s, s), padding='valid',
                         kernel_initializer=initializer(seed=0))(X_shortcut)
     X_shortcut = BatchNormalization(axis=3)(X_shortcut, training=training)
 
-    ### END CODE HERE
 
     # Final step: Add shortcut value to main path (Use this order [X, X_shortcut]), and pass it through a RELU activation
     X = Add()([X, X_shortcut])
