@@ -108,3 +108,93 @@ def convolutional_block(X, f, filters, s=2, training=True, initializer=glorot_un
     return X
 
 
+def ResNet50(input_shape=(64, 64, 3), classes=6):
+    """
+    Stage-wise implementation of the architecture of the popular ResNet50:
+    CONV2D -> BATCHNORM -> RELU -> MAXPOOL -> CONVBLOCK -> IDBLOCK*2 -> CONVBLOCK -> IDBLOCK*3
+    -> CONVBLOCK -> IDBLOCK*5 -> CONVBLOCK -> IDBLOCK*2 -> AVGPOOL -> FLATTEN -> DENSE
+
+    Arguments:
+    input_shape -- shape of the images of the dataset
+    classes -- integer, number of classes
+
+    Returns:
+    model -- a Model() instance in Keras
+    """
+
+    # Define the input as a tensor with shape input_shape
+    X_input = Input(input_shape)
+
+    # Zero-Padding
+    X = ZeroPadding2D((3, 3))(X_input)
+
+    # Stage 1
+    X = Conv2D(64, (7, 7), strides=(2, 2), kernel_initializer=glorot_uniform(seed=0))(X)
+    X = BatchNormalization(axis=3)(X)
+    X = Activation('relu')(X)
+    X = MaxPooling2D((3, 3), strides=(2, 2))(X)
+
+    # Stage 2
+    X = convolutional_block(X, f=3, filters=[64, 64, 256], s=1)
+    X = identity_block(X, 3, [64, 64, 256])
+    X = identity_block(X, 3, [64, 64, 256])
+
+    ## Stage 3
+    X = convolutional_block(X, f=3, filters=[128, 128, 512], s=2)
+    X = identity_block(X, 3, [128, 128, 512])
+    X = identity_block(X, 3, [128, 128, 512])
+    X = identity_block(X, 3, [128, 128, 512])
+
+    ## Stage 4
+    X = convolutional_block(X, f=3, filters=[256, 256, 1024], s=2)
+    X = identity_block(X, 3, [256, 256, 1024])
+    X = identity_block(X, 3, [256, 256, 1024])
+    X = identity_block(X, 3, [256, 256, 1024])
+    X = identity_block(X, 3, [256, 256, 1024])
+    X = identity_block(X, 3, [256, 256, 1024])
+
+    ## Stage 5
+    X = convolutional_block(X, f=3, filters=[512, 512, 2048], s=2)
+    X = identity_block(X, 3, [512, 512, 2048])
+    X = identity_block(X, 3, [512, 512, 2048])
+
+    ## AVGPOOL
+    X = AveragePooling2D(pool_size=(2, 2))(X)
+
+    # output layer
+    X = Flatten()(X)
+    X = Dense(classes, activation='softmax', kernel_initializer=glorot_uniform(seed=0))(X)
+
+    # Create model
+    model = Model(inputs=X_input, outputs=X)
+
+    return model
+
+
+#Model Summary
+model = ResNet50(input_shape = (64, 64, 3), classes = 6)
+print(model.summary())
+
+# compiling the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# The model is now ready to be trained. The only thing you need now is a dataset!
+# Let's load your old friend, the SIGNS dataset.
+X_train_orig, Y_train_orig, X_test_orig, Y_test_orig, classes = load_dataset()
+# Normalize image vectors
+X_train = X_train_orig / 255.
+X_test = X_test_orig / 255.
+
+# Convert training and test labels to one hot matrices
+Y_train = convert_to_one_hot(Y_train_orig, 6).T
+Y_test = convert_to_one_hot(Y_test_orig, 6).T
+
+print ("number of training examples = " + str(X_train.shape[0]))
+print ("number of test examples = " + str(X_test.shape[0]))
+print ("X_train shape: " + str(X_train.shape))
+print ("Y_train shape: " + str(Y_train.shape))
+print ("X_test shape: " + str(X_test.shape))
+print ("Y_test shape: " + str(Y_test.shape))
+
+
+
