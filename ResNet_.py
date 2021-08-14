@@ -109,3 +109,5 @@ def convolutional_block(X, f, filters, s=2, training=True, initializer=glorot_un
     X = Activation('relu')(X)
 
     return X
+
+
